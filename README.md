@@ -42,7 +42,7 @@ Then, create a file describing your store:
 
 import { createStore } from "reax-standalone";
 
-export default createStore({
+const store = createStore({
   state: {
       count: 0
   },
