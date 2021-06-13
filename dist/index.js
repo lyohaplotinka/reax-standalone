@@ -1,41 +1,23 @@
-import { useRef, useReducer, useEffect } from 'react';
-
 function createObservable(value) {
     let _value = value;
     let _idCount = -1;
-    const _listeners = new Map();
+    const _listeners = {};
     return {
         get value() {
             return _value;
         },
         set value(v) {
             _value = v;
-            _listeners.forEach(l => l(v));
+            Object.values(_listeners).forEach((l) => l(v));
         },
         subscribe: (listener) => {
             listener(_value);
             _idCount++;
-            _listeners.set(_idCount, listener);
-            return () => _listeners.delete(_idCount);
-        }
+            let currentId = String(_idCount);
+            _listeners[currentId] = listener;
+            return () => delete _listeners[currentId];
+        },
     };
-}
-function useReaxGetter(getterDescription, store) {
-    const prevValue = useRef(null);
-    const [, forceRender] = useReducer((s) => s + 1, 0);
-    let selectedState = getterDescription.func(store.value[getterDescription.module]);
-    useEffect(() => {
-        const unsubscribe = store.subscribe((v) => {
-            const storeValue = v[getterDescription.module];
-            selectedState = getterDescription.func(storeValue);
-            if (prevValue.current !== selectedState) {
-                prevValue.current = selectedState;
-                forceRender();
-            }
-        });
-        return () => unsubscribe();
-    }, [store]);
-    return selectedState;
 }
 const createModule = (name, descriptor) => {
     const prefix = name === 'root' ? '' : name + '/';
@@ -51,13 +33,19 @@ const createModule = (name, descriptor) => {
         }, {}),
     };
 };
-function createStore(descriptor) {
+const deleteByKeyPart = (startsWith, object) => {
+    for (const key in object) {
+        if (Object.prototype.hasOwnProperty.call(object, key) &&
+            key.startsWith(startsWith))
+            delete object[key];
+    }
+};
+export function createStore(descriptor) {
     if (!Object.prototype.hasOwnProperty.call(descriptor, 'state'))
         throw new ReferenceError('[reax] state must be defined');
     let state = {};
     let mutations = {};
     let rawGetters = {};
-    let getters;
     const { modules = {}, ...root } = descriptor;
     const allModules = { root, ...modules };
     const attachModule = (name, descriptor) => {
@@ -65,21 +53,12 @@ function createStore(descriptor) {
         state = { ...state, ...moduleState };
         mutations = { ...mutations, ...moduleMutations };
         rawGetters = { ...rawGetters, ...moduleGetters };
-        getters = Object.entries(rawGetters).reduce((total, [key, func]) => {
-            total[key] = () => useReaxGetter(func, storeState);
-            return total;
-        }, {});
         return moduleState;
     };
-    const deleteByKeyPart = (startsWith, object) => {
-        for (const key in object) {
-            if (Object.prototype.hasOwnProperty.call(object, key) && key.startsWith(startsWith))
-                delete object[key];
-        }
-    };
-    Object.entries(allModules).forEach(moduleEntry => attachModule(...moduleEntry));
+    Object.entries(allModules).forEach((moduleEntry) => attachModule(...moduleEntry));
     const storeState = createObservable(state);
     return {
+        $$instance: storeState,
         get state() {
             const { root, ...rest } = storeState.value;
             return { ...root, ...rest };
@@ -92,11 +71,10 @@ function createStore(descriptor) {
             func(_st, payload);
             storeState.value = { ...storeState.value, [module]: { ..._st } };
         },
-        getters,
         subscribe: storeState.subscribe.bind(storeState),
         registerModule: function (name, descriptor) {
             const moduleState = attachModule(name, descriptor);
-            this.getters = getters;
+            this.$$rebuildGetters && this.$$rebuildGetters();
             storeState.value = { ...storeState.value, ...moduleState };
         },
         unregisterModule: function (name) {
@@ -104,8 +82,9 @@ function createStore(descriptor) {
             deleteByKeyPart(name, mutations);
             deleteByKeyPart(name, this.getters);
             storeState.value = newState;
-        }
+        },
+        get rawGetters() {
+            return rawGetters;
+        },
     };
 }
-
-export { createStore };

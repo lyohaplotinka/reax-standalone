@@ -1,9 +1,8 @@
-import { useEffect, useReducer, useRef } from 'react';
 import {
   GetterDescription,
-  GetterFunction,
   MutationDescription,
   Observable,
+  ReaxInstance,
   StoreDescriptor,
   Subscriber,
 } from './types';
@@ -11,44 +10,23 @@ import {
 function createObservable(value: Subscriber): Observable {
   let _value = value;
   let _idCount = -1;
-  const _listeners = new Map();
+  const _listeners: Record<string, Subscriber> = {};
   return {
     get value() {
       return _value;
     },
     set value(v) {
       _value = v;
-      _listeners.forEach((l) => l(v));
+      Object.values(_listeners).forEach((l) => l(v));
     },
     subscribe: (listener) => {
       listener(_value);
       _idCount++;
-      _listeners.set(_idCount, listener);
-      return () => _listeners.delete(_idCount);
+      const currentId = String(_idCount);
+      _listeners[currentId] = listener;
+      return () => delete _listeners[currentId];
     },
   };
-}
-
-function useReaxGetter(getterDescription: GetterDescription, store: any) {
-  const prevValue = useRef(null);
-  const [, forceRender] = useReducer((s) => s + 1, 0);
-  let selectedState = getterDescription.func(
-    store.value[getterDescription.module],
-  );
-
-  useEffect(() => {
-    const unsubscribe = store.subscribe((v: any) => {
-      const storeValue = v[getterDescription.module];
-      selectedState = getterDescription.func(storeValue);
-      if (prevValue.current !== selectedState) {
-        prevValue.current = selectedState;
-        forceRender();
-      }
-    });
-    return () => unsubscribe();
-  }, [store]);
-
-  return selectedState;
 }
 
 const createModule = (name: string, descriptor: StoreDescriptor) => {
@@ -72,13 +50,22 @@ const createModule = (name: string, descriptor: StoreDescriptor) => {
   };
 };
 
-export function createStore(descriptor: StoreDescriptor) {
+const deleteByKeyPart = (startsWith: string, object: any) => {
+  for (const key in object) {
+    if (
+      Object.prototype.hasOwnProperty.call(object, key) &&
+      key.startsWith(startsWith)
+    )
+      delete object[key];
+  }
+};
+
+export function createStore(descriptor: StoreDescriptor): ReaxInstance {
   if (!Object.prototype.hasOwnProperty.call(descriptor, 'state'))
     throw new ReferenceError('[reax] state must be defined');
   let state: any = {};
   let mutations: Record<string, MutationDescription> = {};
   let rawGetters: Record<string, GetterDescription> = {};
-  let getters: any;
   const { modules = {}, ...root } = descriptor;
   const allModules = { root, ...modules };
 
@@ -90,24 +77,7 @@ export function createStore(descriptor: StoreDescriptor) {
     state = { ...state, ...moduleState };
     mutations = { ...mutations, ...moduleMutations };
     rawGetters = { ...rawGetters, ...moduleGetters };
-    getters = Object.entries(rawGetters).reduce(
-      (total: Record<string, GetterFunction>, [key, func]) => {
-        total[key] = () => useReaxGetter(func, storeState);
-        return total;
-      },
-      {},
-    );
     return moduleState;
-  };
-
-  const deleteByKeyPart = (startsWith: string, object: any) => {
-    for (const key in object) {
-      if (
-        Object.prototype.hasOwnProperty.call(object, key) &&
-        key.startsWith(startsWith)
-      )
-        delete object[key];
-    }
   };
 
   Object.entries(allModules).forEach((moduleEntry) =>
@@ -117,6 +87,7 @@ export function createStore(descriptor: StoreDescriptor) {
   const storeState = createObservable(state);
 
   return {
+    $$instance: storeState,
     get state() {
       const { root, ...rest } = storeState.value;
       return { ...root, ...rest };
@@ -129,11 +100,10 @@ export function createStore(descriptor: StoreDescriptor) {
       func(_st, payload);
       storeState.value = { ...storeState.value, [module]: { ..._st } };
     },
-    getters,
     subscribe: storeState.subscribe.bind(storeState),
     registerModule: function (name: string, descriptor: StoreDescriptor) {
       const moduleState = attachModule(name, descriptor);
-      this.getters = getters;
+      this.$$rebuildGetters && this.$$rebuildGetters();
       storeState.value = { ...storeState.value, ...moduleState };
     },
     unregisterModule: function (name: string) {
@@ -141,6 +111,9 @@ export function createStore(descriptor: StoreDescriptor) {
       deleteByKeyPart(name, mutations);
       deleteByKeyPart(name, this.getters);
       storeState.value = newState;
+    },
+    get rawGetters() {
+      return rawGetters;
     },
   };
 }
