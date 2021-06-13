@@ -8,6 +8,17 @@ Features:
 * super-easy connection for class-based components;
 * static and dynamic modules support.
 
+## Table of contents
+
+1. [Motivation](#motivation)
+2. [Important points](#important-points)
+3. [Usage](#usage)
+    1. [Usage with functional components](#usage-with-functional-components)
+    2. [Usage with class-based components](#usage-with-class-based-components)
+    3. [Usage with both types of component](#usage-for-both-types-of-component)
+4. [Modules](#modules)
+5. [Direct subscription](#direct-subscription)
+
 ### Motivation
 
 I love Vuex and find it the most convenient library for managing the 
@@ -29,7 +40,7 @@ than the reax-store.
 * In this implementation, there are no "actions" since I believe that 
   they should not be in the store :)
   
-## Getting started
+## Usage
 
 Install the package first:
 ```bash
@@ -197,8 +208,6 @@ As with Vuex, you can use modules. All modules are always namespaced. Accessing 
 ```javascript
 // src/store/index.js
 
-import { createReaxStore } from "reax-store";
-
 const LetterModule = {
   state: {
       text: 'a'
@@ -213,7 +222,7 @@ const LetterModule = {
   }
 }
 
-export default createReaxStore({
+const store = {
   state: {
       count: 0
   },
@@ -228,7 +237,7 @@ export default createReaxStore({
   modules: {
       LetterModule
   }
-})
+}
 ```
 
 ```jsx
@@ -260,8 +269,6 @@ You can register and unregister modules dynamically using the
 ```javascript
 // src/store/index.js
 
-import { createReaxStore } from "reax-store";
-
 export const LetterModule = {
   state: {
       text: 'a'
@@ -276,7 +283,7 @@ export const LetterModule = {
   }
 }
 
-export default createReaxStore({
+const store = {
   state: {
       count: 0
   },
@@ -288,7 +295,7 @@ export default createReaxStore({
   getters: {
       getCount: state => state.count
   }
-})
+}
 ```
 ```jsx
 // App.jsx
