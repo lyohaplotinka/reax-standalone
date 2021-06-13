@@ -5,6 +5,7 @@
 Features: 
 * Super-simple API in the style of Vuex (mutations, getters, etc);
 * **no** context providers: just import and use;
+* super-easy connection for class-based components;
 * static and dynamic modules support.
 
 ### Motivation
@@ -27,10 +28,8 @@ than the reax-store.
   places where you expect.
 * In this implementation, there are no "actions" since I believe that 
   they should not be in the store :)
-* This library is primarily aimed at components in a functional style, 
-  there are no special solutions for class components (yet???).
   
-### Getting started
+## Getting started
 
 Install the package first:
 ```bash
@@ -58,6 +57,38 @@ export default createStore({
 })
 ```
 
+### Usage with functional components
+
+To optimize the size of the bundle, helpers for connecting to different 
+types of React components have been moved to different modules. 
+
+For use with functional components, update your module with the store like this:
+
+```javascript
+// src/store/index.js
+
+import { createStore } from "reax-standalone";
+// import the connection code
+import forFunctional from "reax-sandalone/forFunctional"
+
+const store = createStore({
+  state: {
+      count: 0
+  },
+  mutations: {
+      incrementCount(state, payload) {
+          state.count += payload ?? 1
+      }
+  },
+  getters: {
+      getCount: state => state.count
+  }
+})
+
+// exporting a store ready to work with functional components
+export default forFunctional(store)
+```
+
 After that you can use Reax in your components like this:
 
 ```jsx
@@ -72,7 +103,6 @@ function App() {
   
   return (
       <div>
-        <p>{count}</p>
         <button onClick={() => {
           store.commit('incrementCount', 3)
         }}>
@@ -84,7 +114,84 @@ function App() {
 ```
 That's it!
 
-### Modules
+### Usage with class-based components
+
+For class-components, Reax maps the results of getter functions to a 
+`state` object. To get started, connect the functionality in the store module:
+
+```javascript
+// src/store/index.js
+
+import { createStore } from "reax-standalone";
+// import the connection code
+import forClasses from "reax-sandalone/forClasses"
+
+const store = createStore({
+  state: {
+      count: 0
+  },
+  mutations: {
+      incrementCount(state, payload) {
+          state.count += payload ?? 1
+      }
+  },
+  getters: {
+      getCount: state => state.count
+  }
+})
+
+// exporting a store ready to work with class components
+export default forClasses(store)
+```
+
+Then, in your component:
+
+```jsx
+// App.jsx
+import store from "./store";
+
+class App extends React.Component {
+  state = {};
+  
+  constructor() {
+    super();
+  }
+
+  componentDidMount() {
+    // Note that it is important to pass context to the method. 
+    // Then the state will update automatically.
+    // You can pass more than one getter in a string array, 
+    // including module getters.
+    store.connectGettersToState(this, ['getCount'])
+  }
+  
+  render() {
+    return (
+      <div>
+        <button onClick={() => {
+          store.commit('incrementCount', 3)
+        }}>
+          {/* The state object will contain the keys corresponding to the keys */}
+          {/* of the getters. If you have included a module getter, the */}
+          {/* key will include a slash (this.state[myModule/getter]) */}
+          count is: {this.state['getCount']}
+        </button>
+      </div>
+    )
+  }
+}
+```
+That's it!
+
+### Usage for both types of component
+If you need to use Reax with both functional and class components, you 
+can perform both connection functions in your store module:
+
+```javascript
+export default forClasses(forFunctional(store))
+```
+
+## Modules
 As with Vuex, you can use modules. All modules are always namespaced. Accessing getters and mutations is similar to Vuex.
 
 ```javascript
@@ -212,7 +319,7 @@ function App() {
 }
 ```
 
-### Direct subscription
+## Direct subscription
 You can subscribe to update the store state directly via the 
 `subscribe` method. As an argument, pass a callback that will 
 accept the updated state of the store. Calling the `subscribe` 
@@ -228,6 +335,3 @@ const unsubscribe = store.subscribe(value => {
 // Calling unsubscribe: the above handler is no longer needed
 unsubscribe()
 ```
-
-### TODO
-* [ ] Accessing Global Assets in modules (getters, rootState, rootGetters) for getter functions
