@@ -13,7 +13,7 @@ function createObservable(value) {
         subscribe: (listener) => {
             listener(_value);
             _idCount++;
-            let currentId = String(_idCount);
+            const currentId = String(_idCount);
             _listeners[currentId] = listener;
             return () => delete _listeners[currentId];
         },
