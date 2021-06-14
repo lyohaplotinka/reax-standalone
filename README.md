@@ -1,4 +1,4 @@
-#reax-standalone
+# reax-standalone
 
 #### Tiny, fast and dependency-free React and Preact state management in style of Vuex
 
@@ -18,6 +18,7 @@ Features:
     3. [Usage with both types of component](#usage-for-both-types-of-component)
 4. [Modules](#modules)
 5. [Direct subscription](#direct-subscription)
+6. [API](#api)
 
 ### Motivation
 
