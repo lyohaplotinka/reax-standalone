@@ -1,3 +1,4 @@
+import React from 'react';
 export declare type Subscriber = (value: any) => void;
 export declare type Observable = {
     value: any;
@@ -27,4 +28,7 @@ export interface ReaxInstance {
     registerModule: (name: string, descriptor: StoreDescriptor) => void;
     unregisterModule: (name: string) => void;
     rawGetters: Record<string, GetterDescription>;
+    getters?: Record<string, GetterFunction>;
+    $$rebuildGetters?: () => void;
+    connectGettersToState?: (ctx: React.Component, getter: string | string[]) => void;
 }

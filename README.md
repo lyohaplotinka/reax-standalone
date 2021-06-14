@@ -342,3 +342,28 @@ const unsubscribe = store.subscribe(value => {
 // Calling unsubscribe: the above handler is no longer needed
 unsubscribe()
 ```
+
+## API
+* `store.$$instance` - direct access to the observable object;
+    * `$$instance.value` - current value of observable;
+    * `$$instance.subscribe(listener: Function)` - subscribe a callback to value update,
+    **returns** `unsubscribe` function;
+* `store.state` - get current value of state. The root state is located at 
+  the zero nesting level, the state of the modules will be placed in the 
+  keys corresponding to the names of the modules;
+* `store.commit(mutation: string, payload: any)` - invoking a mutation producing a 
+  state update, triggers re-render;
+* `store.subscribe(listener: Function)` - alias to `$$instance.subscribe`;
+* `store.registerModule(name: string, descriptor: StoreDescriptor)` - dynamically 
+  add a module to the store;
+* `store.unregisterModule(name: string)` - remove module from store;
+* `store.rawGetters` - get list of raw getters (module name + function).
+
+#### API for forFunctional store
+* `store.getters` - get hooks for connecting getters to functional components;
+* `store.$$rebuildGetters()` - rebuild hooks; used when registering modules.
+
+#### API for forClasses store
+* `store.connectGettersToState(context: React.Component, getters: string|string[])` -
+  redirect the value of getters to the state of the component.
+  
