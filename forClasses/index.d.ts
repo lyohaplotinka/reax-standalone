@@ -1,2 +1,2 @@
-import { ReaxInstance } from '../types';
-export default function forClasses(store: ReaxInstance): ReaxInstance;
+import { ReaxInstance, ReaxInstanceForClasses } from '../types';
+export default function forClasses(store: ReaxInstance): ReaxInstanceForClasses;

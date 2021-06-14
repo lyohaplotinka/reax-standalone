@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { ReaxInstance } from '../types';
+import { ReaxInstance, ReaxInstanceForClasses } from '../types';
 
 function subscribeWithGetter(key: string, ctx: Component) {
   const relevantGetter = this.rawGetters[key];
@@ -35,10 +35,12 @@ function connectGetterToState(ctx: Component, getter: string | string[]) {
   };
 }
 
-export default function forClasses(store: ReaxInstance) {
+export default function forClasses(
+  store: ReaxInstance,
+): ReaxInstanceForClasses {
   Object.defineProperty(store, 'connectGettersToState', {
     value: connectGetterToState,
     writable: false,
   });
-  return store;
+  return <ReaxInstanceForClasses>store;
 }

@@ -3,6 +3,7 @@ import {
   GetterFunction,
   Observable,
   ReaxInstance,
+  ReaxInstanceForFunctional,
 } from '../types';
 import { useLayoutEffect, useState, useRef } from 'react';
 
@@ -41,7 +42,9 @@ const buildGetters = (store: ReaxInstance) =>
     {},
   );
 
-export default function forFunctional(store: ReaxInstance) {
+export default function forFunctional(
+  store: ReaxInstance,
+): ReaxInstanceForFunctional {
   Object.defineProperties(store, {
     getters: {
       value: buildGetters(store),
@@ -54,5 +57,5 @@ export default function forFunctional(store: ReaxInstance) {
       },
     },
   });
-  return store;
+  return <ReaxInstanceForFunctional>store;
 }
