@@ -26,7 +26,7 @@
   "bugs": {
     "url": "https://github.com/lyohaplotinka/reax-standalone/issues"
   },
-  "homepage": "https://github.com/lyohaplotinka/reax-standalone#readme",
+  "homepage": "https://lyoha.info/projects/reax-standalone/",
   "devDependencies": {
     "@babel/preset-env": "^7.14.5",
     "@types/react": "^17.0.11",
