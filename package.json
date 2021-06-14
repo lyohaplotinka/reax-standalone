@@ -23,7 +23,7 @@
     "vuex"
   ],
   "author": "Lyoha Plotinka",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/lyohaplotinka/reax-standalone/issues"
   },
