@@ -2,13 +2,14 @@
   "name": "reax-standalone",
   "version": "0.0.1",
   "description": "Tiny, fast and dependency-free React and Preact state management in style of Vuex",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "rm -rf ./dist/* && tsc --build",
-    "dev": "rm -rf ./dist/* && tsc -w",
+    "clean": "rm -f ./index.* ./types.* && rm -rf ./forClasses ./forFunctional",
+    "build": "npm run clean && tsc && mv ./dist/* ./ && rm -rf dist",
+    "dev": "npm run clean && tsc -w",
     "test": "jest",
-    "lint": "eslint '{src, dist}/**/*.{js,ts,tsx}' --quiet --fix",
+    "lint": "eslint 'src/**/*.{js,ts,tsx}' --quiet --fix",
     "prepare": "husky install"
   },
   "repository": {

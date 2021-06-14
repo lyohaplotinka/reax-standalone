@@ -1,6 +1,6 @@
-import { createStore } from '../dist';
-import forFunctional from '../dist/forFunctional';
-import forClasses from '../dist/forClasses';
+import { createStore } from '../';
+import forFunctional from '../forFunctional';
+import forClasses from '../forClasses';
 
 const baseMock = {
   state: { id: 0 },
