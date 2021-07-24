@@ -7,7 +7,7 @@ export type Observable = {
   subscribe: (listener: Subscriber) => () => void;
 };
 
-export type GetterFunction = (state: any) => any;
+export type GetterFunction = (state: any, getters?: any) => any;
 
 export type MutationFunction = (state: any, payload?: any) => void;
 
@@ -40,6 +40,15 @@ export interface ReaxInstanceForFunctional extends ReaxInstance {
 }
 
 export interface ReaxInstanceForClasses extends ReaxInstance {
+  connectGettersToState: (
+    ctx: React.Component,
+    getter: string | string[],
+  ) => void;
+}
+
+export interface ReaxInstanceForAll extends ReaxInstance {
+  getters: Record<string, GetterHook>;
+  $$rebuildGetters: () => void;
   connectGettersToState: (
     ctx: React.Component,
     getter: string | string[],

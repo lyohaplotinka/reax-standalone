@@ -1,5 +1,23 @@
 import { Component } from 'react';
-import { ReaxInstance, ReaxInstanceForClasses } from '../types';
+import {
+  GetterDescription,
+  ReaxInstance,
+  ReaxInstanceForClasses,
+} from '../types';
+
+const buildLocalGetters = (
+  getters: Record<string, GetterDescription>,
+  storeValue: any,
+) => {
+  const result: Record<string, any> = {};
+  for (const getterKey in getters) {
+    if (!Object.prototype.hasOwnProperty.call(getters, getterKey)) continue;
+    const getterDesc = getters[getterKey];
+    result[getterKey] = () =>
+      getterDesc.func(storeValue[getterDesc.module], result);
+  }
+  return result;
+};
 
 function subscribeWithGetter(key: string, ctx: Component) {
   const relevantGetter = this.rawGetters[key];
@@ -8,7 +26,7 @@ function subscribeWithGetter(key: string, ctx: Component) {
   return this.subscribe((value: any) => {
     ctx.setState({
       ...ctx.state,
-      [key]: func(value[module]),
+      [key]: func(value[module], buildLocalGetters(this.rawGetters, value)),
     });
   });
 }

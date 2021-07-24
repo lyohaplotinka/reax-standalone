@@ -1,3 +1,13 @@
+const buildLocalGetters = (getters, storeValue) => {
+    const result = {};
+    for (const getterKey in getters) {
+        if (!Object.prototype.hasOwnProperty.call(getters, getterKey))
+            continue;
+        const getterDesc = getters[getterKey];
+        result[getterKey] = () => getterDesc.func(storeValue[getterDesc.module], result);
+    }
+    return result;
+};
 function subscribeWithGetter(key, ctx) {
     const relevantGetter = this.rawGetters[key];
     if (!relevantGetter)
@@ -6,7 +16,7 @@ function subscribeWithGetter(key, ctx) {
     return this.subscribe((value) => {
         ctx.setState({
             ...ctx.state,
-            [key]: func(value[module]),
+            [key]: func(value[module], buildLocalGetters(this.rawGetters, value)),
         });
     });
 }

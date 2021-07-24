@@ -4,7 +4,7 @@ export declare type Observable = {
     value: any;
     subscribe: (listener: Subscriber) => () => void;
 };
-export declare type GetterFunction = (state: any) => any;
+export declare type GetterFunction = (state: any, getters?: any) => any;
 export declare type MutationFunction = (state: any, payload?: any) => void;
 export declare type GetterDescription = {
     module: string;
@@ -35,5 +35,10 @@ export interface ReaxInstanceForFunctional extends ReaxInstance {
     $$rebuildGetters: () => void;
 }
 export interface ReaxInstanceForClasses extends ReaxInstance {
+    connectGettersToState: (ctx: React.Component, getter: string | string[]) => void;
+}
+export interface ReaxInstanceForAll extends ReaxInstance {
+    getters: Record<string, GetterHook>;
+    $$rebuildGetters: () => void;
     connectGettersToState: (ctx: React.Component, getter: string | string[]) => void;
 }

@@ -1,5 +1,10 @@
 # reax-standalone
 
+<p>
+<img style="margin-right: 10px" src="https://badgen.net/npm/v/reax-standalone" alt="latest version">
+<img src="https://badgen.net/bundlephobia/minzip/reax-standalone@latest" alt="minzipped size">
+</p>
+
 #### Tiny, fast and dependency-free React and Preact state management in style of Vuex
 
 Features: 
@@ -38,8 +43,7 @@ than the reax-store.
 * It is **not 100% Vuex compatible**. Please do not open issues related 
   to API mismatch or the fact that some things are not quite in the 
   places where you expect.
-* In this implementation, there are no "actions" since I believe that 
-  they should not be in the store :)
+* In this implementation, there are no "actions" (coming soon).
   
 ## Usage
 
@@ -64,7 +68,13 @@ const store = createStore({
       }
   },
   getters: {
-      getCount: state => state.count
+      getCount: state => state.count,
+      
+      // Access getters inside getters
+      getCountSquared: (state, getters) => {
+          const count = getters.getCount()
+          return count ** 2
+      }
   }
 })
 ```
@@ -91,9 +101,15 @@ const store = createStore({
       incrementCount(state, payload) {
           state.count += payload ?? 1
       }
-  },
+  }, 
   getters: {
-      getCount: state => state.count
+      getCount: state => state.count,
+    
+      // Access getters inside getters
+      getCountSquared: (state, getters) => {
+          const count = getters.getCount()
+          return count ** 2
+      }
   }
 })
 
@@ -148,7 +164,13 @@ const store = createStore({
       }
   },
   getters: {
-      getCount: state => state.count
+      getCount: state => state.count,
+
+      // Access getters inside getters
+      getCountSquared: (state, getters) => {
+          const count = getters.getCount()
+          return count ** 2
+      }
   }
 })
 
@@ -197,10 +219,13 @@ That's it!
 
 ### Usage for both types of component
 If you need to use Reax with both functional and class components, you 
-can perform both connection functions in your store module:
+can perform this:
 
 ```javascript
-export default forClasses(forFunctional(store))
+// import the connection code
+import forAll from "reax-sandalone/forAll"
+
+export default forAll(store)
 ```
 
 ## Modules
