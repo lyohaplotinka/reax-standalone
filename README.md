@@ -7,6 +7,8 @@
 
 #### Tiny, fast and dependency-free React and Preact state management in style of Vuex
 
+Try it — [Codesandbox](https://codesandbox.io/s/reax-standalone-demo-w7hyb?file=/src/store.ts)
+
 Features: 
 * Super-simple API in the style of Vuex (mutations, getters, etc);
 * **no** context providers: just import and use;
@@ -22,8 +24,9 @@ Features:
     2. [Usage with class-based components](#usage-with-class-based-components)
     3. [Usage with both types of component](#usage-for-both-types-of-component)
 4. [Modules](#modules)
-5. [Direct subscription](#direct-subscription)
-6. [API](#api)
+5. [Actions](#actions)
+6. [Direct subscription](#direct-subscription)
+7. [API](#api)
 
 ### Motivation
 
@@ -43,7 +46,6 @@ than the reax-store.
 * It is **not 100% Vuex compatible**. Please do not open issues related 
   to API mismatch or the fact that some things are not quite in the 
   places where you expect.
-* In this implementation, there are no "actions" (coming soon).
   
 ## Usage
 
@@ -352,6 +354,86 @@ function App() {
 }
 ```
 
+## Actions
+Since version 1.0.0, "actions" have been added to reax - 
+asynchronous functions that have direct access to 
+storage mutations and getters, allowing you to 
+conveniently manage data flows and application state.
+
+An important point: **actions are always asynchronous**. 
+They can return values, but you have to use either 
+the promise syntax or async/await.
+
+To add an action, write the following in the store 
+descriptor:
+
+```javascript
+const store = {
+  state: {
+      count: 0
+  },
+  mutations: {
+      incrementCount(state, payload) {
+          state.count += payload ?? 1
+      }
+  },
+  actions: {
+      increaseWithTimeout(context, payload) {
+          return new Promise(resolve => {
+              setTimeout(() => {
+                  context.commit('incrementCount', payload)
+              }, 1000)
+          })
+      }
+  },
+  getters: {
+      getCount: state => state.count
+  }
+}
+```
+
+Then, in the components, you can call the `dispatch` 
+method, passing the text action key and payload as 
+arguments.
+
+```jsx
+// App.jsx
+import store from "./store";
+
+function App() {
+    
+  const count = store.getters.getCount()
+  
+  return (
+      <div>
+        <p>{count}</p>
+        <button onClick={() => {
+          store.dispatch('increaseWithTimeout', 3)
+        }}>
+          count is: {count}
+        </button>
+      </div>
+  )
+}
+```
+
+`context` consists of three things: `commit`, `dispatch`, 
+and `getters`. The first two methods are used to invoke 
+mutations and actions, respectively. The getters 
+object consists of getter functions, which must be 
+accessed in the same way as in components.
+
+```javascript
+actions: {
+  squareSum(context, payload) {
+      const count = context.getters.getCount()
+      const sum = count + payload
+      context.commit('incrementCount', sum ** 2)
+  }
+},
+```
+
+
 ## Direct subscription
 You can subscribe to update the store state directly via the 
 `subscribe` method. As an argument, pass a callback that will 
@@ -370,20 +452,22 @@ unsubscribe()
 ```
 
 ## API
-* `store.$$instance` - direct access to the observable object;
-    * `$$instance.value` - current value of observable;
-    * `$$instance.subscribe(listener: Function)` - subscribe a callback to value update,
-    **returns** `unsubscribe` function;
 * `store.state` - get current value of state. The root state is located at 
   the zero nesting level, the state of the modules will be placed in the 
   keys corresponding to the names of the modules;
 * `store.commit(mutation: string, payload: any)` - invoking a mutation producing a 
   state update, triggers re-render;
-* `store.subscribe(listener: Function)` - alias to `$$instance.subscribe`;
+* `store.dispatch(action: string, payload: any): Promise<any>` - action call;
 * `store.registerModule(name: string, descriptor: StoreDescriptor)` - dynamically 
   add a module to the store;
 * `store.unregisterModule(name: string)` - remove module from store;
-* `store.rawGetters` - get list of raw getters (module name + function).
+* `store.$$getterFunctions` - getter function map according to modules;
+* `store.$$subscribe(listener: Function)` - alias to `$$instance.subscribe`;
+* `store.$$instance` - direct access to the observable object;
+    * `$$instance.value` - current value of observable;
+    * `$$instance.subscribe(listener: Function)` - subscribe a callback to value update,
+      **returns** `unsubscribe` function;
+* `store.$$selfUpdate(): void` - update reax instance after dynamic module register/unregister, works automatically.
 
 #### API for forFunctional store
 * `store.getters` - get hooks for connecting getters to functional components;
