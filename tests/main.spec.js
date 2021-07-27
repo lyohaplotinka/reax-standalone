@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import { createStore } from '../';
 import forFunctional from '../forFunctional';
 import forClasses from '../forClasses';
@@ -51,14 +52,14 @@ describe('Base tests', () => {
   });
 
   it('Subscribe method returns function', () => {
-    unsubscribe = store.subscribe((value) => value);
+    unsubscribe = store.$$subscribe((value) => value);
     expect(typeof unsubscribe).toBe('function');
     unsubscribe();
   });
 
   it('Subscribe listener emits value on update', (done) => {
     let iterIdx = 0;
-    unsubscribe = store.subscribe((value) => {
+    unsubscribe = store.$$subscribe((value) => {
       if (!iterIdx) {
         iterIdx++;
         return;

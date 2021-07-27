@@ -1,39 +1,23 @@
-const buildLocalGetters = (getters, storeValue) => {
-    const result = {};
-    for (const getterKey in getters) {
-        if (!Object.prototype.hasOwnProperty.call(getters, getterKey))
-            continue;
-        const getterDesc = getters[getterKey];
-        result[getterKey] = () => getterDesc.func(storeValue[getterDesc.module], result);
-    }
-    return result;
-};
 function subscribeWithGetter(key, ctx) {
-    const relevantGetter = this.rawGetters[key];
+    const relevantGetter = this.$$getterFunctions[key];
     if (!relevantGetter)
         return console.error(`[reax] unknown getter: "${key}"`);
-    const { module, func } = relevantGetter;
-    return this.subscribe((value) => {
-        ctx.setState({
-            ...ctx.state,
-            [key]: func(value[module], buildLocalGetters(this.rawGetters, value)),
-        });
+    let oldValue = null;
+    return this.$$subscribe(() => {
+        const currentValue = relevantGetter();
+        if (currentValue !== oldValue) {
+            ctx.setState({
+                ...ctx.state,
+                [key]: currentValue,
+            });
+            oldValue = currentValue;
+        }
     });
 }
 function connectGetterToState(ctx, getter) {
-    const unsubscribeArray = [];
-    if (Array.isArray(getter)) {
-        for (let i = 0; i < getter.length; i++) {
-            const unsubscribe = subscribeWithGetter.call(this, getter[i], ctx);
-            if (unsubscribe)
-                unsubscribeArray.push(unsubscribe);
-        }
-    }
-    else {
-        const unsubscribe = subscribeWithGetter.call(this, getter, ctx);
-        if (unsubscribe)
-            unsubscribeArray.push(unsubscribe);
-    }
+    const unsubscribeArray = []
+        .concat(getter)
+        .map((currentGetter) => subscribeWithGetter.call(this, currentGetter, ctx));
     const originalWillUnmount = ctx.componentWillUnmount;
     ctx.componentWillUnmount = function () {
         unsubscribeArray.forEach((func) => func());

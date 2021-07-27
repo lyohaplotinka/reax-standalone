@@ -1,22 +1,11 @@
-import { useLayoutEffect, useState, useRef, useCallback } from 'react';
-function useReaxGetter(getterDescription, store, rawGetters) {
+import { useLayoutEffect, useState, useRef } from 'react';
+function useReaxGetter(store, getterFunction) {
     const prevValue = useRef(null);
     const forceRender = useState({})[1];
-    const buildLocalGetters = useCallback((getters, storeValue) => {
-        const result = {};
-        for (const getterKey in getters) {
-            if (!Object.prototype.hasOwnProperty.call(getters, getterKey))
-                continue;
-            const getterDesc = getters[getterKey];
-            result[getterKey] = () => getterDesc.func(storeValue, result);
-        }
-        return result;
-    }, []);
-    let currentValue = getterDescription.func(store.value[getterDescription.module], buildLocalGetters(rawGetters, store.value[getterDescription.module]));
+    let currentValue = getterFunction();
     useLayoutEffect(() => {
-        const unsubscribe = store.subscribe((v) => {
-            const storeValue = v[getterDescription.module];
-            currentValue = getterDescription.func(storeValue, buildLocalGetters(rawGetters, storeValue));
+        const unsubscribe = store.subscribe(() => {
+            currentValue = getterFunction();
             if (prevValue.current !== currentValue) {
                 prevValue.current = currentValue;
                 forceRender({});
@@ -26,20 +15,21 @@ function useReaxGetter(getterDescription, store, rawGetters) {
     }, [store]);
     return currentValue;
 }
-const buildGetters = (store) => Object.entries(store.rawGetters).reduce((total, [key, func]) => {
-    total[key] = () => useReaxGetter(func, store.$$instance, store.rawGetters);
+const buildGetters = (store, getterFunctions) => Object.entries(getterFunctions).reduce((total, [key, func]) => {
+    total[key] = () => useReaxGetter(store, func);
     return total;
 }, {});
 export default function forFunctional(store) {
     Object.defineProperties(store, {
         getters: {
-            value: buildGetters(store),
+            value: buildGetters(store.$$instance, store.$$getterFunctions),
             enumerable: true,
             writable: true,
         },
         $$rebuildGetters: {
             value: function () {
-                this.getters = buildGetters(store);
+                this.$$selfUpdate();
+                this.getters = buildGetters(this.$$instance, this.$$getterFunctions);
             },
         },
     });

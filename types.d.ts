@@ -14,21 +14,30 @@ export declare type MutationDescription = {
     module: string;
     func: MutationFunction;
 };
+export declare type ActionFunction = (context: ReaxContext, payload: any) => void | Promise<void>;
 export declare type GetterHook = () => any;
 export interface StoreDescriptor {
     state: any;
     mutations?: Record<string, MutationFunction>;
     getters?: Record<string, GetterFunction>;
     modules?: Record<string, StoreDescriptor>;
+    actions?: Record<string, ActionFunction>;
+}
+export interface ReaxContext {
+    commit: (type: string, payload: any) => void;
+    getters: Record<string, () => any>;
+    dispatch: (type: string, payload: any) => void | Promise<void>;
 }
 export interface ReaxInstance {
-    $$instance: Observable;
     state: any;
     commit: (type: string, payload: any) => void;
-    subscribe: (listener: Subscriber) => () => void;
+    dispatch: (type: string, payload: any) => void | Promise<void>;
     registerModule: (name: string, descriptor: StoreDescriptor) => void;
     unregisterModule: (name: string) => void;
-    rawGetters: Record<string, GetterDescription>;
+    $$instance: Observable;
+    $$subscribe: (listener: Subscriber) => () => void;
+    $$getterFunctions: Record<string, () => any>;
+    $$selfUpdate: () => void;
 }
 export interface ReaxInstanceForFunctional extends ReaxInstance {
     getters: Record<string, GetterHook>;
