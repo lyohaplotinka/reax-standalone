@@ -1,72 +1,66 @@
-function createObservable(value) {
-    let _value = value;
-    let _idCount = -1;
+function observable(value) {
+    let _val = value;
+    let _id = -1;
     const _listeners = {};
     return {
         get value() {
-            return _value;
+            return _val;
         },
         set value(v) {
-            _value = v;
+            _val = v;
             Object.values(_listeners).forEach((l) => l(v));
         },
         subscribe: (listener) => {
-            listener(_value);
-            _idCount++;
-            const currentId = String(_idCount);
+            listener(_val);
+            const currentId = _id++;
             _listeners[currentId] = listener;
             return () => delete _listeners[currentId];
         },
     };
 }
-const createModule = (name, descriptor) => {
+const createModule = (name, desc, store) => {
     const prefix = name === 'root' ? '' : name + '/';
     return {
-        moduleState: { [name]: descriptor.state },
-        moduleGetters: Object.entries(descriptor.getters || {}).reduce((total, [key, func]) => {
-            total[prefix + key] = { func, module: name };
+        mState: { [name]: desc.state },
+        mGetters: Object.entries(desc.getters || {}).reduce((total, [key, func]) => {
+            total[prefix + key] = () => func(store.value[name], total);
             return total;
         }, {}),
-        moduleMutations: Object.entries(descriptor.mutations || {}).reduce((total, [key, func]) => {
-            total[prefix + key] = { func, module: name };
+        mMuts: Object.entries(desc.mutations || {}).reduce((total, [key, func]) => {
+            total[prefix + key] = (pld) => {
+                const _st = { ...store.value[name] };
+                func(_st, pld);
+                return { [name]: _st };
+            };
             return total;
         }, {}),
-        moduleActions: Object.entries(descriptor.actions || {}).reduce((total, [key, func]) => {
+        mActs: Object.entries(desc.actions || {}).reduce((total, [key, func]) => {
             total[prefix + key] = func;
             return total;
         }, {}),
     };
 };
-const deleteByKeyPart = (startsWith, object) => {
-    for (const key in object) {
-        if (Object.prototype.hasOwnProperty.call(object, key) &&
-            key.startsWith(startsWith))
-            delete object[key];
-    }
-};
-const createGetters = (getters, store) => Object.entries(getters).reduce((allGetters, [getterKey, getterDesc]) => {
-    allGetters[getterKey] = () => getterDesc.func(store.value[getterDesc.module], allGetters);
-    return allGetters;
-}, {});
+const deleteByKeyPart = (startsWith, object) => Object.keys(object).forEach((key) => key.startsWith(startsWith) && delete object[key]);
 export function createStore(descriptor) {
     if (!Object.prototype.hasOwnProperty.call(descriptor, 'state'))
         throw new ReferenceError('[reax] state must be defined');
     let state = {};
     let mutations = {};
-    let rawGetters = {};
+    let getterFunctions = {};
     let allActions = {};
     const { modules = {}, ...root } = descriptor;
     const allModules = { root, ...modules };
+    const storeState = observable({});
     const attachModule = (name, descriptor) => {
-        const { moduleState, moduleGetters, moduleMutations, moduleActions } = createModule(name, descriptor);
-        state = Object.assign(state, moduleState);
-        mutations = Object.assign(mutations, moduleMutations);
-        rawGetters = Object.assign(rawGetters, moduleGetters);
-        allActions = Object.assign(allActions, moduleActions);
-        return moduleState;
+        const { mState, mGetters, mMuts, mActs } = createModule(name, descriptor, storeState);
+        state = Object.assign(state, mState);
+        mutations = Object.assign(mutations, mMuts);
+        getterFunctions = Object.assign(getterFunctions, mGetters);
+        allActions = Object.assign(allActions, mActs);
+        return mState;
     };
     Object.entries(allModules).forEach((moduleEntry) => attachModule(...moduleEntry));
-    const storeState = createObservable(state);
+    storeState.value = state;
     const reaxStore = {
         get state() {
             const { root, ...rest } = storeState.value;
@@ -75,14 +69,12 @@ export function createStore(descriptor) {
         commit: (type, payload) => {
             if (!mutations[type])
                 return console.error('[reax] unknown mutation type:', type);
-            const { func, module } = mutations[type];
-            const _st = JSON.parse(JSON.stringify(storeState.value[module]));
-            func(_st, payload);
-            storeState.value = { ...storeState.value, [module]: { ..._st } };
+            storeState.value = Object.assign(storeState.value, mutations[type](payload));
         },
         registerModule: function (name, descriptor) {
             const moduleState = attachModule(name, descriptor);
-            this.$$rebuildGetters ? this.$$rebuildGetters() : this.$$selfUpdate();
+            this.$$getterFunctions = getterFunctions;
+            this.$$rebuildGetters && this.$$rebuildGetters();
             storeState.value = { ...storeState.value, ...moduleState };
         },
         unregisterModule: function (name) {
@@ -90,7 +82,8 @@ export function createStore(descriptor) {
             deleteByKeyPart(name, mutations);
             deleteByKeyPart(name, this.getters);
             storeState.value = newState;
-            this.$$rebuildGetters ? this.$$rebuildGetters() : this.$$selfUpdate();
+            this.$$getterFunctions = getterFunctions;
+            this.$$rebuildGetters && this.$$rebuildGetters();
         },
         dispatch: async (type, payload) => {
             return allActions[type]({
@@ -99,12 +92,8 @@ export function createStore(descriptor) {
                 getters: reaxStore.$$getterFunctions,
             }, payload);
         },
-        $$getterFunctions: createGetters(rawGetters, storeState),
-        $$subscribe: storeState.subscribe.bind(storeState),
+        $$getterFunctions: getterFunctions,
         $$instance: storeState,
-        $$selfUpdate: function () {
-            this.$$getterFunctions = createGetters(rawGetters, storeState);
-        },
     };
     Object.keys(reaxStore).forEach((key) => key.startsWith('$$') &&
         Object.defineProperty(reaxStore, key, { enumerable: false }));
