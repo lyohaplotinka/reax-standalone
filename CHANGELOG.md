@@ -1,3 +1,10 @@
+### 1.0.1
+* refactor: getters and mutations simplified;
+* refactor: `$$selfUpdate` method deleted;
+* refactor: `$$subscribe` method deleted, 
+  use `$$instance.subscribe` instead;
+* size reduction.
+
 ### 1.0.0
 * BREAKING: `subscribe` => `$$subscribe`;
 * BREAKING: `rawGetters` deleted (replaced with `$$getterFunctions`);

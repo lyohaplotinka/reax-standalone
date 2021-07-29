@@ -48,7 +48,6 @@ export default function forFunctional(
     },
     $$rebuildGetters: {
       value: function () {
-        this.$$selfUpdate();
         this.getters = buildGetters(this.$$instance, this.$$getterFunctions);
       },
     },
