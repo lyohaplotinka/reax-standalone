@@ -7,6 +7,8 @@
 
 #### Tiny, fast and dependency-free React and Preact state management in style of Vuex
 
+Since v1.1.0 supports pure Preact without `preact/compat`!
+
 Try it — [Codesandbox](https://codesandbox.io/s/reax-standalone-demo-w7hyb?file=/src/store.ts)
 
 Features: 
@@ -93,7 +95,12 @@ For use with functional components, update your module with the store like this:
 
 import { createStore } from "reax-standalone";
 // import the connection code
+// for react:
 import forFunctional from "reax-sandalone/forFunctional"
+// this is for react too:
+import forFunctional from "reax-sandalone/forFunctional/react"
+// for preact:
+import forFunctional from "reax-sandalone/forFunctional/preact"
 
 const store = createStore({
   state: {
@@ -153,7 +160,7 @@ For class-components, Reax maps the results of getter functions to a
 // src/store/index.js
 
 import { createStore } from "reax-standalone";
-// import the connection code
+// import the connection code, both react and preact
 import forClasses from "reax-sandalone/forClasses"
 
 const store = createStore({
@@ -224,8 +231,12 @@ If you need to use Reax with both functional and class components, you
 can perform this:
 
 ```javascript
-// import the connection code
+// import the connection code, for react:
 import forAll from "reax-sandalone/forAll"
+// also for react:
+import forAll from "reax-sandalone/forAll/react"
+// for preact:
+import forAll from "reax-sandalone/forAll/preact"
 
 export default forAll(store)
 ```

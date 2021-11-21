@@ -1,23 +1,28 @@
-import { Component } from 'react';
-import { ReaxInstance, ReaxInstanceForClasses } from '../types';
+import {
+  ReactLikeComponentClass,
+  ReaxInstance,
+  ReaxInstanceForClasses,
+} from '../types';
 
-function subscribeWithGetter(key: string, ctx: Component) {
+function subscribeWithGetter(key: string, ctx: ReactLikeComponentClass) {
   const relevantGetter = this.$$getterFunctions[key];
   if (!relevantGetter) return console.error(`[reax] unknown getter: "${key}"`);
-  let oldValue: any = null;
-  return this.$$subscribe(() => {
-    const currentValue: any = relevantGetter();
+  let oldValue: unknown = null;
+  return this.$$instance.subscribe(() => {
+    const currentValue: unknown = relevantGetter();
     if (currentValue !== oldValue) {
-      ctx.setState({
-        ...ctx.state,
-        [key]: currentValue,
+      ctx.setState((prevState: Record<string, unknown>) => {
+        return Object.assign(prevState, { [key]: currentValue });
       });
       oldValue = currentValue;
     }
   });
 }
 
-function connectGetterToState(ctx: Component, getter: string | string[]) {
+function connectGetterToState(
+  ctx: ReactLikeComponentClass,
+  getter: string | string[],
+) {
   const unsubscribeArray: Array<() => void> = ([] as string[])
     .concat(getter)
     .map((currentGetter) => subscribeWithGetter.call(this, currentGetter, ctx));
