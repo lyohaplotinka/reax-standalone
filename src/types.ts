@@ -1,29 +1,31 @@
 import React from 'react';
 
-export type Subscriber = (value: any) => void;
+export type Subscriber = (value: unknown) => void;
 
-export type Observable = {
-  value: any;
-  subscribe: (listener: Subscriber) => () => void;
-};
+export type State = Record<string, unknown>;
 
-export type GetterFunction = (state: any, getters?: any) => any;
+export type GetterFunction = (state: State, getters?: GettersMap) => unknown;
 
-export type MutationFunction = (state: any, payload?: any) => void;
+export type MutationFunction = (state: State, payload?: unknown) => void;
 
-export type MutationsMap = Record<string, (pld?: any) => any>;
+export type MutationsMap = Record<string, (pld?: unknown) => unknown>;
 
-export type GettersMap = Record<string, () => any>;
+export type GettersMap = Record<string, () => unknown>;
 
 export type ActionFunction = (
   context: ReaxContext,
-  payload?: any,
-) => Promise<void | any>;
+  payload?: unknown,
+) => Promise<void | unknown>;
 
-export type GetterHook = () => any;
+export type GetterHook = () => unknown;
+
+export interface Observable {
+  value: unknown;
+  subscribe: (listener: Subscriber) => () => void;
+}
 
 export interface StoreDescriptor {
-  state: any;
+  state: State;
   mutations?: Record<string, MutationFunction>;
   getters?: Record<string, GetterFunction>;
   modules?: Record<string, StoreDescriptor>;
@@ -31,19 +33,19 @@ export interface StoreDescriptor {
 }
 
 export interface ReaxContext {
-  commit: (type: string, payload?: any) => void;
-  getters: Record<string, () => any>;
-  dispatch: (type: string, payload?: any) => Promise<void | any>;
+  commit: (type: string, payload?: unknown) => void;
+  getters: Record<string, () => unknown>;
+  dispatch: (type: string, payload?: unknown) => Promise<void | unknown>;
 }
 
 export interface ReaxInstance {
-  state: any;
-  commit: (type: string, payload: any) => void;
-  dispatch: (type: string, payload: any) => void | Promise<void>;
+  state: State;
+  commit: (type: string, payload: unknown) => void;
+  dispatch: (type: string, payload: unknown) => unknown | Promise<unknown>;
   registerModule: (name: string, descriptor: StoreDescriptor) => void;
   unregisterModule: (name: string) => void;
   $$instance: Observable;
-  $$getterFunctions: Record<string, () => any>;
+  $$getterFunctions: Record<string, () => unknown>;
 }
 
 export interface ReaxInstanceForFunctional extends ReaxInstance {
@@ -70,5 +72,5 @@ export interface ReaxInstanceForAll extends ReaxInstance {
 export interface ReactLikeComponentClass {
   setState: CallableFunction;
   componentWillUnmount: CallableFunction;
-  state: object;
+  state: Record<string, unknown>;
 }

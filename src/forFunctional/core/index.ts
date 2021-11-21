@@ -8,7 +8,7 @@ import type { FrameworkHooksObject } from './types';
 
 function useReaxGetter(
   store: Observable,
-  getterFunction: () => any,
+  getterFunction: () => unknown,
   hooks: FrameworkHooksObject,
 ) {
   const { useState, useRef, useLayoutEffect } = hooks;
@@ -32,7 +32,7 @@ function useReaxGetter(
 
 const buildGetters = (
   store: Observable,
-  getterFunctions: Record<string, () => any>,
+  getterFunctions: Record<string, () => unknown>,
   hooks: FrameworkHooksObject,
 ) =>
   Object.entries(getterFunctions).reduce(

@@ -7,9 +7,9 @@ import {
 function subscribeWithGetter(key: string, ctx: ReactLikeComponentClass) {
   const relevantGetter = this.$$getterFunctions[key];
   if (!relevantGetter) return console.error(`[reax] unknown getter: "${key}"`);
-  let oldValue: any = null;
+  let oldValue: unknown = null;
   return this.$$subscribe(() => {
-    const currentValue: any = relevantGetter();
+    const currentValue: unknown = relevantGetter();
     if (currentValue !== oldValue) {
       ctx.setState({
         ...ctx.state,
