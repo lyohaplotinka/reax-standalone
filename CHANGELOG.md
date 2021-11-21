@@ -1,6 +1,7 @@
 ### 1.1.0
 * chore: switch to pnpm;
 * chore: replaced husky with dependency-free solution;
+* refactor: abstraction for `forFunctional` to allow use in preact without `preact/compat`;
 
 ### 1.0.1
 * refactor: getters and mutations simplified;

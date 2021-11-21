@@ -66,3 +66,9 @@ export interface ReaxInstanceForAll extends ReaxInstance {
     getter: string | string[],
   ) => void;
 }
+
+export interface ReactLikeComponentClass {
+  setState: CallableFunction;
+  componentWillUnmount: CallableFunction;
+  state: object;
+}

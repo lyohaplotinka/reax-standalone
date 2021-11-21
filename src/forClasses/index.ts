@@ -1,7 +1,10 @@
-import { Component } from 'react';
-import { ReaxInstance, ReaxInstanceForClasses } from '../types';
+import {
+  ReactLikeComponentClass,
+  ReaxInstance,
+  ReaxInstanceForClasses,
+} from '../types';
 
-function subscribeWithGetter(key: string, ctx: Component) {
+function subscribeWithGetter(key: string, ctx: ReactLikeComponentClass) {
   const relevantGetter = this.$$getterFunctions[key];
   if (!relevantGetter) return console.error(`[reax] unknown getter: "${key}"`);
   let oldValue: any = null;
@@ -17,7 +20,10 @@ function subscribeWithGetter(key: string, ctx: Component) {
   });
 }
 
-function connectGetterToState(ctx: Component, getter: string | string[]) {
+function connectGetterToState(
+  ctx: ReactLikeComponentClass,
+  getter: string | string[],
+) {
   const unsubscribeArray: Array<() => void> = ([] as string[])
     .concat(getter)
     .map((currentGetter) => subscribeWithGetter.call(this, currentGetter, ctx));

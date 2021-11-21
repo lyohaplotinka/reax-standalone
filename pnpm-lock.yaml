@@ -10,6 +10,7 @@ specifiers:
   eslint-plugin-prettier: ^3.4.0
   eslint-plugin-react: ^7.24.0
   jest: ^27.0.4
+  preact: ^10.5.15
   prettier: ^2.3.1
   react: ^17.0.2
   regenerator-runtime: ^0.13.9
@@ -26,6 +27,7 @@ devDependencies:
   eslint-plugin-prettier: 3.4.1_6e975bd57c7acf028c1a9ddbbf60c898
   eslint-plugin-react: 7.27.1_eslint@7.32.0
   jest: 27.3.1
+  preact: 10.5.15
   prettier: 2.4.1
   react: 17.0.2
   regenerator-runtime: 0.13.9
@@ -3912,6 +3914,10 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       find-up: 4.1.0
+    dev: true
+
+  /preact/10.5.15:
+    resolution: {integrity: sha512-5chK29n6QcJc3m1lVrKQSQ+V7K1Gb8HeQY6FViQ5AxCAEGu3DaHffWNDkC9+miZgsLvbvU9rxbV1qinGHMHzqA==}
     dev: true
 
   /prelude-ls/1.1.2:
