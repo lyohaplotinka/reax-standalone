@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+PATH="/usr/local/bin:$PATH"
+
+if [ -f $HOME/.nvm/nvm.sh ]
+then
+  . $HOME/.nvm/nvm.sh
+  PATH="$HOME/.nvm/versions/node/$(nvm current)/bin:$PATH"
+fi
+
+npm run lint && ./node_modules/.bin/tsc --noEmit && npm run test && git add .

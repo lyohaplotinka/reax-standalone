@@ -1,3 +1,7 @@
+### 1.1.0
+* chore: switch to pnpm;
+* chore: replaced husky with dependency-free solution;
+
 ### 1.0.1
 * refactor: getters and mutations simplified;
 * refactor: `$$selfUpdate` method deleted;
