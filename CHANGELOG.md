@@ -1,8 +1,11 @@
 ### 1.1.0
 * chore: switch to pnpm;
 * chore: replaced husky with dependency-free solution;
-* refactor: abstraction for `forFunctional` to allow use in preact without `preact/compat`;
-* refactor: better types;
+* fix: wrong subscribe call in `forClasses`;
+* fix: previous-state related state update in `forClasses`;
+* feat: abstraction for `forFunctional` and `forAll` to allow use in preact 
+  without `preact/compat` (pure preact support);
+* refactor: better types.
 
 ### 1.0.1
 * refactor: getters and mutations simplified;

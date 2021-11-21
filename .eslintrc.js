@@ -20,5 +20,6 @@ module.exports = {
       'error',
       { ignoreRestSiblings: true },
     ],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
   },
 };

@@ -40,8 +40,8 @@ export interface ReaxContext {
 
 export interface ReaxInstance {
   state: State;
-  commit: (type: string, payload: unknown) => void;
-  dispatch: (type: string, payload: unknown) => unknown | Promise<unknown>;
+  commit: (type: string, payload?: unknown) => void;
+  dispatch: (type: string, payload?: unknown) => unknown | Promise<unknown>;
   registerModule: (name: string, descriptor: StoreDescriptor) => void;
   unregisterModule: (name: string) => void;
   $$instance: Observable;

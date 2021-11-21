@@ -1,6 +1,6 @@
 {
   "name": "reax-standalone",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Tiny, fast and dependency-free React and Preact state management in style of Vuex",
   "main": "index.js",
   "types": "index.d.ts",
