@@ -1,30 +1,22 @@
 function subscribeWithGetter(key, ctx) {
-    const relevantGetter = this.$$getterFunctions[key];
-    if (!relevantGetter)
+    if (!this.$$getterFunctions[key])
         return console.error(`[reax] unknown getter: "${key}"`);
     let oldValue = null;
     return this.$$instance.subscribe(() => {
-        const currentValue = relevantGetter();
-        if (currentValue !== oldValue) {
-            ctx.setState((prevState) => {
-                return Object.assign(prevState, { [key]: currentValue });
-            });
-            oldValue = currentValue;
-        }
+        const currentValue = this.$$getterFunctions[key]();
+        currentValue !== oldValue &&
+            ctx.setState((prevState) => Object.assign(prevState, { [key]: (oldValue = currentValue) }));
     });
 }
 function connectGetterToState(ctx, getter) {
     const unsubscribeArray = []
         .concat(getter)
         .map((currentGetter) => subscribeWithGetter.call(this, currentGetter, ctx));
-    const originalWillUnmount = ctx.componentWillUnmount;
+    const unmount = ctx.componentWillUnmount;
     ctx.componentWillUnmount = function () {
         unsubscribeArray.forEach((func) => func());
-        for (let i = 0; i < unsubscribeArray.length; i++) {
-            unsubscribeArray[i]();
-        }
-        originalWillUnmount && originalWillUnmount();
-    };
+        unmount && unmount();
+    }.bind(ctx);
 }
 export default function forClasses(store) {
     Object.defineProperty(store, 'connectGettersToState', {

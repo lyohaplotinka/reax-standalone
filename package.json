@@ -1,12 +1,13 @@
 {
   "name": "reax-standalone",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tiny, fast and dependency-free React and Preact state management in style of Vuex",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "clean": "rm -f ./index.* ./types.* && rm -rf ./forClasses ./forFunctional ./forAll ./utils",
     "build": "npm run clean && tsc && mv ./dist/* ./ && rm -rf dist",
+    "get-sizes": "js-compressed-size ./index.js && js-compressed-size ./forFunctional/core/index.js && js-compressed-size ./forClasses/index.js",
     "dev": "npm run clean && tsc -w",
     "test": "jest",
     "lint": "eslint 'src/**/*.{js,ts,tsx}' --quiet --fix",
@@ -38,6 +39,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.24.0",
     "jest": "^27.0.4",
+    "js-compressed-size": "^0.1.3",
     "preact": "^10.5.15",
     "prettier": "^2.3.1",
     "react": "^17.0.2",

@@ -1,3 +1,7 @@
+### 1.1.1
+* refactor: ~300kb lower bundle size;
+* refactor: observable simplified.
+
 ### 1.1.0
 * chore: switch to pnpm;
 * chore: replaced husky with dependency-free solution;
