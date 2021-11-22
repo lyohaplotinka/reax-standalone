@@ -1,7 +1,6 @@
 import type {
   ActionFunction,
   GettersMap,
-  MutationFunction,
   MutationsMap,
   Observable,
   ReaxInstance,
@@ -10,23 +9,21 @@ import type {
   Subscriber,
 } from './types';
 
-function observable(value: unknown): Observable {
-  let _val = value;
-  let _id = -1;
-  const _listeners: Record<string, Subscriber> = {};
+function observable(v: unknown): Observable {
+  let _v = v;
+  const _list: Subscriber[] = [];
   return {
     get value() {
-      return _val;
+      return _v;
     },
     set value(v) {
-      _val = v;
-      Object.values(_listeners).forEach((l) => l(v));
+      _v = v;
+      _list.forEach((l) => l(v));
     },
-    subscribe: (listener) => {
-      listener(_val);
-      const currentId = _id++;
-      _listeners[currentId] = listener;
-      return () => delete _listeners[currentId];
+    subscribe: (l) => {
+      l(_v);
+      const idx = _list.push(l) - 1;
+      return () => _list.splice(idx, 1);
     },
   };
 }
@@ -35,37 +32,31 @@ const createModule = (
   name: string,
   desc: StoreDescriptor,
   store: Observable,
+  state: State,
+  mutations: MutationsMap,
+  getterFunctions: GettersMap,
+  allActions: Record<string, ActionFunction>,
 ) => {
   const prefix = name === 'root' ? '' : name + '/';
-  return {
-    mState: { [name]: desc.state },
-    mGetters: Object.entries(desc.getters || {}).reduce(
-      (total: Record<string, () => unknown>, [key, func]) => {
-        total[prefix + key] = () =>
-          func((store.value as State)[name] as State, total);
-        return total;
-      },
-      {},
-    ),
-    mMuts: Object.entries(desc.mutations || {}).reduce(
-      (total: Record<string, MutationFunction>, [key, func]) => {
-        total[prefix + key] = (pld?: unknown) => {
-          const _st = { ...((store.value as State)[name] as State) };
-          func(_st, pld);
-          return { [name]: _st };
-        };
-        return total;
-      },
-      {},
-    ),
-    mActs: Object.entries(desc.actions || {}).reduce(
-      (total: Record<string, ActionFunction>, [key, func]) => {
-        total[prefix + key] = func;
-        return total;
-      },
-      {},
-    ),
-  };
+  const moduleState = { [name]: desc.state };
+  Object.assign(state, moduleState);
+  Object.entries(desc.getters || {}).forEach(
+    ([key, func]) =>
+      (getterFunctions[prefix + key] = () =>
+        func((store.value as State)[name] as State, getterFunctions)),
+  );
+  Object.entries(desc.mutations || {}).forEach(
+    ([key, func]) =>
+      (mutations[prefix + key] = (pld?: unknown) => {
+        const _st = { ...((store.value as State)[name] as State) };
+        func(_st, pld);
+        return { [name]: _st };
+      }),
+  );
+  Object.entries(desc.actions || {}).forEach(
+    ([key, func]) => (allActions[prefix + key] = func),
+  );
+  return moduleState;
 };
 
 const deleteByKeyPart = (startsWith: string, object: Record<string, unknown>) =>
@@ -76,30 +67,25 @@ const deleteByKeyPart = (startsWith: string, object: Record<string, unknown>) =>
 export function createStore(descriptor: StoreDescriptor): ReaxInstance {
   if (!Object.prototype.hasOwnProperty.call(descriptor, 'state'))
     throw new ReferenceError('[reax] state must be defined');
-  let state: State = {};
-  let mutations: MutationsMap = {};
-  let getterFunctions: GettersMap = {};
-  let allActions: Record<string, ActionFunction> = {};
+  const state: State = {};
+  const mutations: MutationsMap = {};
+  const getterFunctions: GettersMap = {};
+  const allActions: Record<string, ActionFunction> = {};
   const { modules = {}, ...root } = descriptor;
   const allModules = { root, ...modules };
 
   const storeState = observable({});
 
-  const attachModule = (name: string, descriptor: StoreDescriptor) => {
-    const { mState, mGetters, mMuts, mActs } = createModule(
-      name,
-      descriptor,
-      storeState,
-    );
-    state = Object.assign(state, mState);
-    mutations = Object.assign(mutations, mMuts);
-    getterFunctions = Object.assign(getterFunctions, mGetters);
-    allActions = Object.assign(allActions, mActs);
-    return mState;
-  };
-
   Object.entries(allModules).forEach((moduleEntry) =>
-    attachModule(...moduleEntry),
+    createModule(
+      moduleEntry[0],
+      moduleEntry[1],
+      storeState,
+      state,
+      mutations,
+      getterFunctions,
+      allActions,
+    ),
   );
 
   storeState.value = state;
@@ -118,7 +104,15 @@ export function createStore(descriptor: StoreDescriptor): ReaxInstance {
       );
     },
     registerModule: function (name: string, descriptor: StoreDescriptor) {
-      const moduleState = attachModule(name, descriptor);
+      const moduleState = createModule(
+        name,
+        descriptor,
+        storeState,
+        state,
+        mutations,
+        getterFunctions,
+        allActions,
+      );
       this.$$getterFunctions = getterFunctions;
       this.$$rebuildGetters && this.$$rebuildGetters();
       storeState.value = { ...(storeState.value as State), ...moduleState };
